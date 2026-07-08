@@ -1,0 +1,13 @@
+comment "broadcom-sta needs a Linux kernel to be built"
+	depends on !BR2_LINUX_KERNEL
+
+config BR2_PACKAGE_BROADCOM_STA
+	bool "broadcom-sta"
+	depends on BR2_LINUX_KERNEL
+	help
+	  Broadcom STA (wl) proprietary driver, patched for modern kernels.
+	  Supports BCM4360 (PCI ID 14e4:43a0) and other Broadcom chips
+	  that have no working in-tree driver (b43/brcmsmac/brcmfmac all
+	  lack support for this chip revision).
+
+	  https://github.com/develeacid/broadcom-sta-patched
