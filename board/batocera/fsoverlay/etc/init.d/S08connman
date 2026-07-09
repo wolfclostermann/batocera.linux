@@ -113,10 +113,21 @@ wifi_enable() {
     settings_ssid="$(/usr/bin/batocera-settings-get -f "$BATOCONF" wifi.ssid)"
     ssid_hex=$(echo -n "$settings_ssid" | xxd -p | tr -d '\n')
 
+    # Check *our* wifi service's own state, not connmanctl's global state:
+    # the global state is already "ready"/"online" as soon as ethernet is
+    # connected, regardless of wifi, which previously made this report
+    # success without ever actually attempting the wifi connection.
+    is_wifi_connected() {
+        local svc state
+        svc=$(connmanctl services 2>/dev/null | awk '{print $NF}' | grep "^wifi_" | grep "_${ssid_hex}_" | head -1)
+        [ -n "$svc" ] || return 1
+        state=$(connmanctl services "$svc" 2>/dev/null | grep "State =" | awk '{print $NF}')
+        [ "$state" = "ready" ] || [ "$state" = "online" ]
+    }
+
     connected=false
     for i in $(seq 1 10); do
-        state=$(connmanctl state 2>/dev/null | grep "State =" | awk '{print $3}')
-        if [ "$state" = "ready" ] || [ "$state" = "online" ]; then
+        if is_wifi_connected; then
             connected=true
             break
         fi
@@ -126,8 +137,7 @@ wifi_enable() {
         sleep 1
         # Build a signal-sorted list of matching services and try each one
         while read signal service; do
-            state=$(connmanctl state 2>/dev/null | grep "State =" | awk '{print $3}')
-            [ "$state" = "ready" ] || [ "$state" = "online" ] && { connected=true; break; }
+            is_wifi_connected && { connected=true; break; }
             echo "*** Wifi trying service: $service (signal: $signal) ***" > /dev/kmsg
             connmanctl connect "$service" 2>/dev/null
             sleep 2
