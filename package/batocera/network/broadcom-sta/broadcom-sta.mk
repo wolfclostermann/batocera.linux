@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-BROADCOM_STA_VERSION = batocera-6.18.16-1
+BROADCOM_STA_VERSION = batocera-6.18.16-2
 BROADCOM_STA_SITE = $(call github,wolfclostermann,broadcom-sta-patched,$(BROADCOM_STA_VERSION))
 BROADCOM_STA_LICENSE = Proprietary
 BROADCOM_STA_REDISTRIBUTE = NO
